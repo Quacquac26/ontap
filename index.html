@@ -107,8 +107,9 @@ function R(){const d=D();$('#app').innerHTML=`<header><select data-c="deck">${S.
 // ===== TAB: DANH SÁCH / TÌM KIẾM / SỬA CÂU HỎI =====
 function vEdit(){const d=D(),n=d.qs.filter(q=>!q.a.length).length;
  return `<div class="row"><input id="sq" placeholder="Tìm câu hỏi hoặc đáp án…" value="${esc(F.q)}"><select data-c="sf">${[['all','Tất cả'],['na','Chưa có đáp án'],['wr','Hay sai']].map(([k,t])=>`<option value="${k}" ${F.f===k?'selected':''}>${t}</option>`).join('')}</select><button class="p" data-a="add">+ Thêm câu</button></div><p class="m">${d.qs.length} câu · ${n} chưa có đáp án</p><div id="list"></div>`}
-function L(){const d=D(),k=F.q.toLowerCase().trim();
- const r=d.qs.map((q,i)=>[q,i]).filter(([q,i])=>(F.f==='all'||(F.f==='na'&&!q.a.length)||(F.f==='wr'&&q.w>0))&&(!k||(i+1+' '+q.q+' '+q.o.join(' ')).toLowerCase().includes(k)));
+const nm=s=>String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+function L(){const d=D(),w=[...new Set(nm(F.q).split(' ').filter(Boolean))],lg=w.length>6;
+ const r=d.qs.map((q,i)=>{const h=nm(i+1+' '+q.q+' '+q.o.join(' ')),s=w.length?w.filter(x=>h.includes(x)).length/w.length:1;return[q,i,s]}).filter(([q,i,s])=>(F.f==='all'||(F.f==='na'&&!q.a.length)||(F.f==='wr'&&q.w>0))&&(lg?s>=.6:s===1));if(lg)r.sort((a,b)=>b[2]-a[2]);
  $('#list').innerHTML=r.slice(0,100).map(([q,i])=>`<div class="card item" data-a="edit" data-i="${i}"><b>${i+1}.</b> ${esc(q.q.length>160?q.q.slice(0,160)+'…':q.q)}<div class="m">${q.a.length?'Đáp án: '+q.a.map(j=>LET[j]).join(', '):'<span class="tag">chưa có đáp án</span>'} · ${q.o.length} lựa chọn${q.sh===false?' · không đảo':''}${q.w>0?' · sai '+q.w:''}</div></div>`).join('')+(r.length>100?`<p class="m">Hiện 100/${r.length} câu, gõ tìm kiếm để thu hẹp.</p>`:r.length?'':'<p class="m">Không có câu nào.</p>')}
 function M(){$('#modal').innerHTML=E?`<div class="ov"><div class="mod"><b>${E.i>=0?'Sửa câu '+(E.i+1):'Câu mới'}</b><textarea id="eq" rows="4">${esc(E.q.q)}</textarea><p class="m">Tick ô vuông = đáp án đúng (tick nhiều ô nếu câu có nhiều đáp án đúng).</p>
 ${E.q.o.map((o,j)=>`<div class="orow"><input type="checkbox" class="ec" data-j="${j}" ${E.q.a.includes(j)?'checked':''}><b>${LET[j]}</b><input class="eo" value="${esc(o)}"><button class="d" data-a="rmo" data-j="${j}">×</button></div>`).join('')}
