@@ -23,6 +23,7 @@ textarea,#sq{width:100%}#sq{flex:1;min-width:160px}
 .bar{height:6px;background:var(--b);border-radius:9px}.bar i{display:block;height:100%;background:var(--p);border-radius:9px}
 .m{color:var(--m);font-size:14px;margin:4px 0}.tag{font-size:12px;color:var(--no);border:1px solid var(--no);border-radius:6px;padding:0 6px;margin-left:6px}
 .gok{border-left:4px solid var(--ok)}.gno{border-left:4px solid var(--no)}
+.nav{display:flex;flex-wrap:wrap;gap:4px;max-height:130px;overflow-y:auto;margin:6px 0}.nav button{min-width:38px;padding:4px 6px;font-size:14px}.nav .an{background:color-mix(in srgb,var(--p) 18%,transparent)}.nav .gd{background:var(--okb);border-color:var(--ok)}.nav .bd{background:var(--nob);border-color:var(--no)}.nav .cur{outline:2px solid var(--p);font-weight:700}
 .ov{position:fixed;inset:0;background:#0009;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:16px;z-index:9}
 .mod{background:var(--c);border-radius:14px;padding:16px;width:100%;max-width:640px}
 .orow{display:flex;gap:6px;align-items:center;margin:6px 0}.orow .eo{flex:1;min-width:0}
@@ -132,8 +133,10 @@ function vPrac(){if(P)return P.end?vRes():P.mode==='card'?vCard():vQ();
 <button class="p" data-a="st">Bắt đầu</button></div>`}
 const mkI=q=>{const o=q.o.map((_,i)=>i);if(PS.so==='y'||(PS.so==='q'&&q.sh!==false))shuf(o);return{q,ord:o,sel:[],done:false}};
 const okI=it=>it.sel.length===it.q.a.length&&it.q.a.every(x=>it.sel.includes(x));
+function vNav(){const n=P.items.length,sh=P.nv!==false;
+ return `<div class="row"><input type="number" id="gj" min="1" max="${n}" placeholder="Đến câu…" style="width:110px"><button data-a="gj">Đi</button><button data-a="nv">${sh?'Ẩn':'Hiện'} bảng câu hỏi</button></div>${sh?`<div class="nav">${P.items.map((x,i)=>`<button data-a="go" data-i="${i}" class="${i===P.i?'cur':''} ${P.mode==='learn'&&x.done?(okI(x)?'gd':'bd'):x.sel.length?'an':''}">${i+1}</button>`).join('')}</div>`:''}`}
 function vQ(){const it=P.items[P.i],q=it.q,mu=q.a.length>1,ck=P.mode==='learn'&&it.done,n=P.items.length;
- return `<div class="card"><div class="row"><span class="m">Câu ${P.i+1}/${n}${mu?' · chọn '+q.a.length+' đáp án':''}</span><button data-a="ex" style="margin-left:auto">Thoát</button></div><div class="bar"><i style="width:${(P.i+1)/n*100}%"></i></div><div class="q">${esc(q.q)}</div>
+ return `<div class="card"><div class="row"><span class="m">Câu ${P.i+1}/${n}${mu?' · chọn '+q.a.length+' đáp án':''}</span><button data-a="ex" style="margin-left:auto">Thoát</button></div><div class="bar"><i style="width:${(P.i+1)/n*100}%"></i></div>${vNav()}<div class="q">${esc(q.q)}</div>
 ${it.ord.map((oi,k)=>{const s=it.sel.includes(oi),c=q.a.includes(oi);return `<button class="opt ${ck?(c?'ok':s?'no':''):(s?'sel':'')}" data-a="pk" data-oi="${oi}"><b>${LET[k]}</b><span>${esc(q.o[oi])}</span></button>`}).join('')}
 ${ck?`<p><b style="color:var(--${okI(it)?'ok':'no'})">${okI(it)?'Đúng rồi!':'Chưa đúng'}</b></p>`:''}
 <div class="row"><button data-a="pv" ${P.i?'':'disabled'}>← Trước</button>${P.mode==='learn'&&mu&&!it.done?'<button class="p" data-a="chk">Kiểm tra</button>':''}${P.i<n-1?'<button class="p" data-a="nx">Sau →</button>':''}<button data-a="sub" style="margin-left:auto" class="${P.i===n-1?'p':''}">Nộp bài</button></div></div>`}
@@ -182,7 +185,7 @@ const A={tab:d=>{V=d.k;R()},
   S.ps=PS;save();const n=PS.n==='all'?pool.length:Math.max(1,Math.min(+PS.n||pool.length,pool.length)),pick=shuf(pool.slice()).slice(0,n);if(!PS.sq)pick.sort((a,b)=>d.qs.indexOf(a)-d.qs.indexOf(b));
   P={mode:PS.mode,items:pick.map(mkI),i:0,ok:0,opt:true};R()},
  pk:d=>{const it=P.items[P.i],oi=+d.oi;if(it.done)return;it.sel=it.q.a.length>1?(it.sel.includes(oi)?it.sel.filter(x=>x!==oi):[...it.sel,oi]):[oi];if(P.mode==='learn'&&it.q.a.length===1)it.done=true;R()},
- chk(){P.items[P.i].done=true;R()},nx(){if(P.i<P.items.length-1){P.i++;R()}},pv(){if(P.i>0){P.i--;R()}},
+ chk(){P.items[P.i].done=true;R()},go:d=>{P.i=+d.i;R()},gj(){const v=+$('#gj').value;if(v>=1&&v<=P.items.length){P.i=v-1;R()}else toast('Nhập số từ 1 đến '+P.items.length)},nv(){P.nv=P.nv===false;R()},nx(){if(P.i<P.items.length-1){P.i++;R()}},pv(){if(P.i>0){P.i--;R()}},
  sub(){const u=P.items.filter(x=>!x.sel.length).length;if(u&&!confirm(`Còn ${u} câu chưa trả lời. Nộp bài?`))return;fin()},
  flt:d=>{P.flt=d.k;R()},ex(){P=null;R()},
  retry(){const w=P.items.filter(x=>!x.ok).map(x=>mkI(x.q));P={mode:P.mode,items:w,i:0,ok:0,opt:true};R()},
@@ -193,7 +196,7 @@ const A={tab:d=>{V=d.k;R()},
  pvx(){PV=null;R()},
  exp(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));a.download='quiz-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click()}};
 const C={deck:t=>{S.cur=t.value;save();P=null;R()},sf:t=>{F.f=t.value;L()},file:t=>{onFile(t.files[0]);t.value=''},
- psq:t=>{PS.sq=t.checked},pso:t=>{PS.so=t.value},psn:t=>{if(t.value){PS.n=t.value;R()}},popt:t=>{P.opt=t.checked;R()},
+ psq:t=>{PS.sq=t.checked},gj:t=>{if(t.value)A.gj()},gj:t=>{if(t.value)A.gj()},gj:t=>{if(t.value)A.gj()},gj:t=>{if(t.value)A.gj()},gj:t=>{if(t.value)A.gj()},pso:t=>{PS.so=t.value},psn:t=>{if(t.value){PS.n=t.value;R()}},popt:t=>{P.opt=t.checked;R()},
  jf:async t=>{try{const j=JSON.parse(await t.files[0].text());if(!j.decks||!j.decks.length)throw 0;
   if(confirm('OK = THAY toàn bộ dữ liệu hiện tại bằng file backup.\nHủy = GỘP thêm các bộ đề trong file vào dữ liệu hiện tại.'))S=j;else j.decks.forEach(d=>{d.id=uid();S.decks.push(d)});
   S.cur=S.decks[0].id;P=null;save();R();toast('Đã nhập backup')}catch(e){toast('File backup không hợp lệ')}t.value=''}};
