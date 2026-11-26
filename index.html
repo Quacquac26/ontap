@@ -106,10 +106,10 @@ function R(){const d=D();$('#app').innerHTML=`<header><select data-c="deck">${S.
 
 // ===== TAB: DANH SÁCH / TÌM KIẾM / SỬA CÂU HỎI =====
 function vEdit(){const d=D(),n=d.qs.filter(q=>!q.a.length).length;
- return `<div class="row"><input id="sq" placeholder="Tìm câu hỏi hoặc đáp án…" value="${esc(F.q)}"><select data-c="sf">${[['all','Tất cả'],['na','Chưa có đáp án'],['wr','Hay sai']].map(([k,t])=>`<option value="${k}" ${F.f===k?'selected':''}>${t}</option>`).join('')}</select><button class="p" data-a="add">+ Thêm câu</button></div><p class="m">${d.qs.length} câu · ${n} chưa có đáp án</p><div id="list"></div>`}
+ return `<div class="row"><input id="sq" placeholder="Tìm câu hỏi hoặc đáp án…" value="${esc(F.q)}"><input id="sn" type="number" min="1" placeholder="Đến câu số…" value="${F.n||''}" style="width:130px"><select data-c="sf">${[['all','Tất cả'],['na','Chưa có đáp án'],['wr','Hay sai']].map(([k,t])=>`<option value="${k}" ${F.f===k?'selected':''}>${t}</option>`).join('')}</select><button class="p" data-a="add">+ Thêm câu</button></div><p class="m">${d.qs.length} câu · ${n} chưa có đáp án</p><div id="list"></div>`}
 const nm=s=>String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
-function L(){const d=D(),w=[...new Set(nm(F.q).split(' ').filter(Boolean))],lg=w.length>6;
- const r=d.qs.map((q,i)=>{const h=nm(i+1+' '+q.q+' '+q.o.join(' ')),s=w.length?w.filter(x=>h.includes(x)).length/w.length:1;return[q,i,s]}).filter(([q,i,s])=>(F.f==='all'||(F.f==='na'&&!q.a.length)||(F.f==='wr'&&q.w>0))&&(lg?s>=.6:s===1));if(lg)r.sort((a,b)=>b[2]-a[2]);
+function L(){const d=D(),w=nm(F.q).split(' ').filter(Boolean),lg=w.length>6;
+ const nn=+F.n,bg=lg?w.slice(1).map((x,i)=>w[i]+' '+x):[];let r=d.qs.map((q,i)=>{const h=nm(q.q+' '+q.o.join(' ')),s=nn?(i+1===nn?1:0):!w.length?1:lg?bg.filter(x=>h.includes(x)).length/bg.length:w.filter(x=>h.includes(x)).length/w.length;return[q,i,s]}).filter(([q,i,s])=>(F.f==='all'||(F.f==='na'&&!q.a.length)||(F.f==='wr'&&q.w>0))&&(nn?s===1:lg?s>=.3:s===1));if(lg&&!nn){const m=Math.max(0,...r.map(x=>x[2]));r=r.filter(x=>x[2]>=m-.2);r.sort((a,b)=>b[2]-a[2])}
  $('#list').innerHTML=r.slice(0,100).map(([q,i])=>`<div class="card item" data-a="edit" data-i="${i}"><b>${i+1}.</b> ${esc(q.q.length>160?q.q.slice(0,160)+'…':q.q)}<div class="m">${q.a.length?'Đáp án: '+q.a.map(j=>LET[j]).join(', '):'<span class="tag">chưa có đáp án</span>'} · ${q.o.length} lựa chọn${q.sh===false?' · không đảo':''}${q.w>0?' · sai '+q.w:''}</div></div>`).join('')+(r.length>100?`<p class="m">Hiện 100/${r.length} câu, gõ tìm kiếm để thu hẹp.</p>`:r.length?'':'<p class="m">Không có câu nào.</p>')}
 function M(){$('#modal').innerHTML=E?`<div class="ov"><div class="mod"><b>${E.i>=0?'Sửa câu '+(E.i+1):'Câu mới'}</b><textarea id="eq" rows="4">${esc(E.q.q)}</textarea><p class="m">Tick ô vuông = đáp án đúng (tick nhiều ô nếu câu có nhiều đáp án đúng).</p>
 ${E.q.o.map((o,j)=>`<div class="orow"><input type="checkbox" class="ec" data-j="${j}" ${E.q.a.includes(j)?'checked':''}><b>${LET[j]}</b><input class="eo" value="${esc(o)}"><button class="d" data-a="rmo" data-j="${j}">×</button></div>`).join('')}
@@ -209,7 +209,7 @@ const C={deck:t=>{S.cur=t.value;save();P=null;R()},sf:t=>{F.f=t.value;L()},file:
   if(confirm('OK = THAY toàn bộ dữ liệu hiện tại bằng file backup.\nHủy = GỘP thêm các bộ đề trong file vào dữ liệu hiện tại.'))S=j;else j.decks.forEach(d=>{d.id=uid();S.decks.push(d)});
   S.cur=S.decks[0].id;P=null;save();R();toast('Đã nhập backup')}catch(e){toast('File backup không hợp lệ')}t.value=''}};
 document.addEventListener('click',e=>{const a=e.target.closest('[data-a]');if(a&&A[a.dataset.a])A[a.dataset.a](a.dataset)});
-document.addEventListener('input',e=>{if(e.target.id==='sq'){F.q=e.target.value;L()}});
+document.addEventListener('input',e=>{if(e.target.id==='sq'){F.q=e.target.value;L()}else if(e.target.id==='sn'){F.n=e.target.value;L()}});
 document.addEventListener('change',e=>{const c=e.target.dataset.c;if(c&&C[c])C[c](e.target)});
 document.addEventListener('keydown',e=>{if(E||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)||e.ctrlKey||e.metaKey)return;const j=LET.indexOf(e.key.toUpperCase());
  if(V==='quick'&&j>=0&&e.key.length===1){const b=document.querySelector(`[data-a="qk"][data-j="${j}"]`);b&&b.click()}
