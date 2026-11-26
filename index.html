@@ -44,7 +44,7 @@ const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){toast('Kh
 function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display='none',3500)}
 const D=()=>S.decks.find(d=>d.id===S.cur)||(S.cur=S.decks[0].id,S.decks[0]);
 let V='edit',F={q:'',f:'all'},P=null,E=null,PV=null,SK=new Set(),UD=[];
-let PS=Object.assign({mode:'test',n:'40',pool:'all',sq:true,so:'q'},S.ps||{});
+let PS=Object.assign({mode:'test',n:'40',pool:'all',sq:true,so:'q',t:'0'},S.ps||{});
 // câu có đáp án kiểu "Chỉ II và III", "Cả A và B", "Tất cả..." thì tự đặt không đảo
 const AUTO=/(tất cả|cả\s+[A-D]\b|\b[A-D]\s+và\s+[A-D]\b|đều\s+(đúng|sai)|không\s+có\s+(câu|đáp))/i,ROM=/^(Chỉ\s+)?[IVX]+(\s*,|\s+và\s|$)/;
 const mk=(q,o,a)=>({id:uid(),q,o,a:a||[],sh:!o.some(x=>AUTO.test(x)||ROM.test(x.trim())),w:0});
@@ -130,13 +130,13 @@ function vPrac(){if(P)return P.end?vRes():P.mode==='card'?vCard():vQ();
 <b>Số câu (lấy ngẫu nhiên)</b><div class="row">${['20','40','50','100','all'].map(v=>b('n',v,v==='all'?'Tất cả':v)).join('')}<input type="number" min="1" placeholder="Số khác" data-c="psn" style="width:110px" value="${['20','40','50','100','all'].includes(PS.n)?'':PS.n}"></div>
 <b>Nguồn câu hỏi</b><div class="row">${b('pool','all','Tất cả câu')}${b('pool','wr','Chỉ câu hay sai')}</div>
 <b>Thứ tự</b><div class="row"><label><input type="checkbox" data-c="psq" ${PS.sq?'checked':''}> Đảo thứ tự câu hỏi</label><label>Đảo đáp án: <select data-c="pso">${[['q','Theo từng câu'],['y','Luôn đảo'],['n','Không đảo']].map(([k,t])=>`<option value="${k}" ${PS.so===k?'selected':''}>${t}</option>`).join('')}</select></label></div>
-<button class="p" data-a="st">Bắt đầu</button></div>`}
+${PS.mode==='test'?`<b>Thời gian làm bài (chỉ thi thử)</b><div class="row">${['0','20','45','60','90'].map(v=>b('t',v,v==='0'?'Không giới hạn':v+' phút')).join('')}<input type="number" min="1" placeholder="Số phút khác" data-c="pst" style="width:130px" value="${['0','20','45','60','90'].includes(PS.t)?'':PS.t}"></div>`:''}<button class="p" data-a="st">Bắt đầu</button></div>`}
 const mkI=q=>{const o=q.o.map((_,i)=>i);if(PS.so==='y'||(PS.so==='q'&&q.sh!==false))shuf(o);return{q,ord:o,sel:[],done:false}};
 const okI=it=>it.sel.length===it.q.a.length&&it.q.a.every(x=>it.sel.includes(x));
 function vNav(){const n=P.items.length,sh=P.nv!==false;
  return `<div class="row"><input type="number" id="gj" min="1" max="${n}" placeholder="Đến câu…" style="width:110px"><button data-a="gj">Đi</button><button data-a="nv">${sh?'Ẩn':'Hiện'} bảng câu hỏi</button></div>${sh?`<div class="nav">${P.items.map((x,i)=>`<button data-a="go" data-i="${i}" class="${i===P.i?'cur':''} ${P.mode==='learn'&&x.done?(okI(x)?'gd':'bd'):x.sel.length?'an':''}">${i+1}</button>`).join('')}</div>`:''}`}
 function vQ(){const it=P.items[P.i],q=it.q,mu=q.a.length>1,ck=P.mode==='learn'&&it.done,n=P.items.length;
- return `<div class="card"><div class="row"><span class="m">Câu ${P.i+1}/${n}${mu?' · chọn '+q.a.length+' đáp án':''}</span><button data-a="ex" style="margin-left:auto">Thoát</button></div><div class="bar"><i style="width:${(P.i+1)/n*100}%"></i></div>${vNav()}<div class="q">${esc(q.q)}</div>
+ return `<div class="card"><div class="row"><span class="m">Câu ${P.i+1}/${n} · đã làm ${P.items.filter(x=>x.sel.length).length}${mu?' · chọn '+q.a.length+' đáp án':''}</span>${P.endAt?`<b id="tm">⏱ ${tmFmt(Math.max(0,Math.round((P.endAt-Date.now())/1000)))}</b>`:''}<button data-a="ex" style="margin-left:auto">Thoát</button></div><div class="bar"><i style="width:${P.items.filter(x=>x.sel.length).length/n*100}%"></i></div>${vNav()}<div class="q">${esc(q.q)}</div>
 ${it.ord.map((oi,k)=>{const s=it.sel.includes(oi),c=q.a.includes(oi);return `<button class="opt ${ck?(c?'ok':s?'no':''):(s?'sel':'')}" data-a="pk" data-oi="${oi}"><b>${LET[k]}</b><span>${esc(q.o[oi])}</span></button>`}).join('')}
 ${ck?`<p><b style="color:var(--${okI(it)?'ok':'no'})">${okI(it)?'Đúng rồi!':'Chưa đúng'}</b></p>`:''}
 <div class="row"><button data-a="pv" ${P.i?'':'disabled'}>← Trước</button>${P.mode==='learn'&&mu&&!it.done?'<button class="p" data-a="chk">Kiểm tra</button>':''}${P.i<n-1?'<button class="p" data-a="nx">Sau →</button>':''}<button data-a="sub" style="margin-left:auto" class="${P.i===n-1?'p':''}">Nộp bài</button></div></div>`}
@@ -146,7 +146,14 @@ function vRes(){const it=P.items,ok=it.filter(x=>x.ok).length,f=P.flt;
 function vCard(){const c=P.items[0];if(!c)return `<div class="card"><h3>Hoàn thành 🎉</h3><p>Đã nhớ ${P.ok} thẻ.</p><button class="p" data-a="ex">Về menu</button></div>`;
  return `<div class="card"><div class="row"><span class="m">Còn ${P.items.length} thẻ</span><label style="margin-left:auto"><input type="checkbox" data-c="popt" ${P.opt?'checked':''}> Hiện đáp án A–D</label><button data-a="ex">Thoát</button></div><div class="q">${esc(c.q.q)}</div>${P.opt?c.ord.map((oi,k)=>`<div class="opt"><b>${LET[k]}</b><span>${esc(c.q.o[oi])}</span></div>`).join(''):''}
 ${P.flip?`<div class="opt ok" style="margin-top:12px"><span>${c.q.a.map(i=>`<b>${LET[c.ord.indexOf(i)]}.</b> ${esc(c.q.o[i])}`).join('<br>')}</span></div><div class="row"><button class="d" data-a="no">Chưa nhớ</button><button class="p" data-a="kn">Nhớ rồi</button></div>`:'<button class="p" data-a="fl">Lật xem đáp án</button>'}</div>`}
-function fin(){P.items.forEach(it=>{it.ok=okI(it);if(!it.ok)it.q.w=(it.q.w||0)+1;else if(it.q.w>0)it.q.w--});save();P.end=true;P.flt='all';R()}
+let TM=null;
+function tmStop(){clearInterval(TM);TM=null}
+function tmFmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function tmStart(){tmStop();const m=+PS.t;if(P.mode!=='test'||!(m>0))return;P.endAt=Date.now()+m*60000;
+ TM=setInterval(()=>{if(!P||P.end||!P.endAt)return tmStop();const s=Math.max(0,Math.round((P.endAt-Date.now())/1000)),e=$('#tm');
+  if(e){e.textContent='⏱ '+tmFmt(s);e.style.color=s<=60?'var(--no)':''}
+  if(s<=0){tmStop();toast('Hết giờ! Bài đã được nộp.');fin()}},1000)}
+function fin(){tmStop();P.items.forEach(it=>{it.ok=okI(it);if(!it.ok)it.q.w=(it.q.w||0)+1;else if(it.q.w>0)it.q.w--});save();P.end=true;P.flt='all';R()}
 
 // ===== TAB: NHẬP / XUẤT =====
 function vIO(){return `<div class="card"><b>Nhập đề vào bộ "${esc(D().name)}"</b><p><input type="file" data-c="file" accept=".xlsx,.xls,.csv,.docx,.pdf,.txt"></p><p class="m">Excel/CSV: cột STT, Câu hỏi, A, B, C, D (có cột "Đáp án" thì tự điền). Word: "Câu 1: …" rồi A. B. C. D., đáp án đúng tô <b>chữ đỏ</b>/highlight/in đậm/gạch chân, hoặc có dòng "Đáp án: B". PDF: chỉ đọc được chữ, không đọc được định dạng.</p><textarea id="pt" rows="5" placeholder="Hoặc dán văn bản (copy từ PDF/Word) vào đây…"></textarea><p><button data-a="pt">Phân tích văn bản dán</button></p></div>${PV?vPV():''}
@@ -183,7 +190,7 @@ const A={tab:d=>{V=d.k;R()},
  ps:d=>{PS[d.k]=d.v;R()},
  st(){const d=D();const pool=d.qs.filter(q=>q.a.length&&q.o.length>1&&(PS.pool!=='wr'||q.w>0));if(!pool.length)return toast('Không có câu nào phù hợp (câu cần có đáp án).');
   S.ps=PS;save();const n=PS.n==='all'?pool.length:Math.max(1,Math.min(+PS.n||pool.length,pool.length)),pick=shuf(pool.slice()).slice(0,n);if(!PS.sq)pick.sort((a,b)=>d.qs.indexOf(a)-d.qs.indexOf(b));
-  P={mode:PS.mode,items:pick.map(mkI),i:0,ok:0,opt:true};R()},
+  P={mode:PS.mode,items:pick.map(mkI),i:0,ok:0,opt:true};tmStart();R()},
  pk:d=>{const it=P.items[P.i],oi=+d.oi;if(it.done)return;it.sel=it.q.a.length>1?(it.sel.includes(oi)?it.sel.filter(x=>x!==oi):[...it.sel,oi]):[oi];if(P.mode==='learn'&&it.q.a.length===1)it.done=true;R()},
  chk(){P.items[P.i].done=true;R()},go:d=>{P.i=+d.i;R()},gj(){const v=+$('#gj').value;if(v>=1&&v<=P.items.length){P.i=v-1;R()}else toast('Nhập số từ 1 đến '+P.items.length)},nv(){P.nv=P.nv===false;R()},nx(){if(P.i<P.items.length-1){P.i++;R()}},pv(){if(P.i>0){P.i--;R()}},
  sub(){const u=P.items.filter(x=>!x.sel.length).length;if(u&&!confirm(`Còn ${u} câu chưa trả lời. Nộp bài?`))return;fin()},
@@ -196,7 +203,7 @@ const A={tab:d=>{V=d.k;R()},
  pvx(){PV=null;R()},
  exp(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));a.download='quiz-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click()}};
 const C={deck:t=>{S.cur=t.value;save();P=null;R()},sf:t=>{F.f=t.value;L()},file:t=>{onFile(t.files[0]);t.value=''},
- psq:t=>{PS.sq=t.checked},gj:t=>{if(t.value)A.gj()},gj:t=>{if(t.value)A.gj()},gj:t=>{if(t.value)A.gj()},gj:t=>{if(t.value)A.gj()},gj:t=>{if(t.value)A.gj()},pso:t=>{PS.so=t.value},psn:t=>{if(t.value){PS.n=t.value;R()}},popt:t=>{P.opt=t.checked;R()},
+ psq:t=>{PS.sq=t.checked},pst:t=>{if(t.value){PS.t=t.value;R()}},gj:t=>{if(t.value)A.gj()},gj:t=>{if(t.value)A.gj()},gj:t=>{if(t.value)A.gj()},gj:t=>{if(t.value)A.gj()},gj:t=>{if(t.value)A.gj()},pso:t=>{PS.so=t.value},psn:t=>{if(t.value){PS.n=t.value;R()}},popt:t=>{P.opt=t.checked;R()},
  jf:async t=>{try{const j=JSON.parse(await t.files[0].text());if(!j.decks||!j.decks.length)throw 0;
   if(confirm('OK = THAY toàn bộ dữ liệu hiện tại bằng file backup.\nHủy = GỘP thêm các bộ đề trong file vào dữ liệu hiện tại.'))S=j;else j.decks.forEach(d=>{d.id=uid();S.decks.push(d)});
   S.cur=S.decks[0].id;P=null;save();R();toast('Đã nhập backup')}catch(e){toast('File backup không hợp lệ')}t.value=''}};
